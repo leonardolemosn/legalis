@@ -5,9 +5,9 @@ const { jwtPassword } = require("../config/security/jwtPassword");
 const { consultaOAB } = require("../services/oabValidate");
 
 const registerUser = async (req, res) => {
-    const { user_type_id, nome, email, telefone, senha, OAB, CPF } = req.body;
+    const { user_type_id, nome, email, telefone, senha, oab, cpf } = req.body;
     try {
-        const usuarioExistente = await knex("users_documents").where({ document_number: CPF }).first();
+        const usuarioExistente = await knex("users_documents").where({ document_number: cpf }).first();
 
         if (usuarioExistente) {
             return res.status(400).json({ mensagem: "Usuário já cadastrado" });
@@ -31,17 +31,26 @@ const registerUser = async (req, res) => {
             return res.status(404).json({ mensagem: "Tipo de perfil não encontrado" });
         }
 
-        if (OAB) {
-            const numerosOAB = OAB.match(/\d+/g).join('');
-
+        if (oab) {
+            const numerosOAB = oab.match(/\d+/g).join('');
             const oabResult = await consultaOAB(nome, numerosOAB);
             if (!oabResult) {
                 return res.status(404).json({ mensagem: "Advogado não encontrado" });
             }
-            if (oabResult.toLowerCase() !== nome.toLowerCase()) {
-                return res.status(404).json({ mensagaem: "OAB não corresponde ao advogado informado" })
+
+            const nomeSemAcento = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const oabResultSemAcento = oabResult.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+            if (oabResultSemAcento !== nomeSemAcento) {
+                return res.status(404).json({ mensagem: "OAB não corresponde ao advogado informado" });
+            }
+
+            const validarOAB = await knex("users_documents").where({ document_number: oab });
+            if (validarOAB.length > 0) {
+                return res.status(400).json({ mensagem: "OAB já cadastrada no sistema" });
             }
         }
+
 
 
         const senhaCriptografada = await bcrypt.hash(senha, 10);
@@ -66,18 +75,18 @@ const registerUser = async (req, res) => {
             await knex("users_documents").insert({
                 user_id: user.user_id,
                 document_type_id: "886b95e6-b4ed-42e8-8233-dbaa4714c2e8",
-                document_number: OAB,
+                document_number: oab,
                 active: true,
                 created_at: new Date(),
                 updated_at: new Date()
             });
         }
-        
+
 
         await knex("users_documents").insert({
             user_id: user.user_id,
             document_type_id: "9077d318-d943-4b7a-bfdd-035c85d347a3",
-            document_number: CPF,
+            document_number: cpf,
             active: true,
             created_at: new Date(),
             updated_at: new Date()
