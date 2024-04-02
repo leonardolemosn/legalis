@@ -1,5 +1,4 @@
 const knex = require("../config/conexao");
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { jwtPassword } = require("../config/security/jwtPassword");
 const { consultarCNPJ } = require("../services/cnpjValidate");
@@ -44,62 +43,78 @@ const validateCNPJ_CEP = async (req, res) => {
 
 const registerCompany = async (req, res) => {
     const { cnpj, razao_social, nome_fantasia, cep, state, city, neighborhood, street, number, office_name, parent_office_id } = req.body;
+    const timestamp = new Date();
+    let office_id;
 
     try {
-        const cnpjExistente = await knex("users_documents").where({ document_number: cnpj }).first();
+        await knex.transaction(async trx => {
+            const cnpjExistente = await trx("users_documents").where({ document_number: cnpj }).first();
 
-        if (cnpjExistente && !cnpjExistente.active) {
-            await knex("offices")
-                .where({ office_id: cnpjExistente.office_id })
-                .delete();
-            await knex("users_documents").where({ document_number: cnpj }).delete();
+            if (cnpjExistente && cnpjExistente.active) {
+                throw new Error("CNPJ já cadastrado para uma empresa ativa.");
+            }
 
-        } else if (cnpjExistente) {
-            return res.status(400).json({ mensagem: "CNPJ já cadastrado para uma empresa ativa." });
-        }
+            const officeData = {
+                name: office_name,
+                parent_office_id: parent_office_id || null,
+                razao_social,
+                nome_fantasia,
+                active: true,
+                created_at: timestamp
+            };
 
-        const [offices] = await knex("offices").insert({
-            name: office_name,
-            parent_office_id: parent_office_id || null,
-            razao_social,
-            nome_fantasia,
-            active: true
-        }).returning('office_id');
+            if (cnpjExistente) {
+                const updatedOffice = await trx("offices")
+                    .where({ office_id: cnpjExistente.office_id })
+                    .update(officeData)
+                    .returning('office_id');
+                office_id = updatedOffice[0]; // Ajuste para acessar o ID corretamente
+            } else {
+                officeData.created_at = timestamp;
+                const [newOffice] = await trx("offices")
+                    .insert(officeData)
+                    .returning('office_id');
+                office_id = newOffice.office_id;
+            }
 
-        if (!offices) {
-            return res.status(404).json({ mensagem: "Erro ao adicionar empresa" });
-        }
+            if (!office_id) {
+                throw new Error("Erro ao adicionar/atualizar empresa");
+            }
 
-        if (!offices.office_id) {
-            return res.status(400).json({ mensagem: "Identificador do escritório é obrigatório)" });
-        }
+            await trx("users_documents").insert({
+                office_id: office_id,
+                document_type_id: "20f53e68-22c8-4f6b-9076-d3eb2364fe9f",
+                document_number: cnpj,
+                active: true,
+                created_at: timestamp,
+                updated_at: timestamp
+            });
 
-        await knex("users_documents").insert({
-            office_id: offices.office_id,
-            document_type_id: "20f53e68-22c8-4f6b-9076-d3eb2364fe9f",
-            document_number: cnpj,
-            active: true,
-            created_at: new Date(),
-            updated_at: new Date()
+            await trx("offices_addresses").insert({
+                cep,
+                state,
+                city,
+                neighborhood,
+                street,
+                office_id: office_id,
+                number,
+                created_at: timestamp,
+                updated_at: timestamp
+            });
+
+            // Resposta com office_id
+            res.json({ office_id });
         });
-
-        await knex("offices_addresses").insert({
-            cep,
-            state,
-            city,
-            neighborhood,
-            street,
-            office_id: offices.office_id,
-            number,
-            created_at: new Date(),
-            updated_at: new Date()
-        })
-
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ mensagem: "Server error", error: error.message });
+        res.status(500).json({ mensagem: "Server error", error: error.message });
     }
 };
+
+module.exports = {
+    registerCompany
+};
+
 
 
 module.exports = {

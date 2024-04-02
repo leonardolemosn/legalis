@@ -5,7 +5,7 @@ const { jwtPassword } = require("../config/security/jwtPassword");
 const { consultaOAB } = require("../services/oabValidate");
 
 const registerUser = async (req, res) => {
-    const { user_type_id, nome, email, telefone, senha, oab, cpf } = req.body;
+    const { user_type_id, nome, email, telefone, senha, oab, cpf, office_id } = req.body;
     try {
         const usuarioExistente = await knex("users_documents").where({ document_number: cpf }).first();
 

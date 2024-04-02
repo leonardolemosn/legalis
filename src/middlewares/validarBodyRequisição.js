@@ -1,11 +1,12 @@
-const joi = require("joi");
-
 const validarBodyRequisicao = (joiSchema) => async (req, res, next) => {
   try {
-    await joiSchema.validateAsync(req.body);
+    const { error } = joiSchema.validate(req.body);
+    if (error) {
+      throw error;
+    }
     next();
   } catch (error) {
-    res.status(500).json({ mensagem: error.message });
+    res.status(400).json({ mensagem: error.message });
   }
 };
 

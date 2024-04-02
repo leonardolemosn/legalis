@@ -1,16 +1,16 @@
 const axios = require('axios');
 
-async function consultarCEP(cep) {
+async function consultarCNPJ(cnpj) {
     try {
-        const url = `https://brasilapi.com.br/api/cep/v1/{cep}`;
+        const url = `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`;
         const response = await axios.get(url);
         return response.data;
     } catch (error) {
-        console.error('Erro na consulta do CEP:', error);
+        console.error('Erro na consulta do CNPJ:', error.response ? error.response.data : error.message);
         return null;
     }
 }
 
 module.exports = {
-    consultarCEP
+    consultarCNPJ
 };

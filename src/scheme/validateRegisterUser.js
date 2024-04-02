@@ -34,7 +34,7 @@ const validacaoCadastrarUsuario = Joi.object({
         "string.empty": "O campo user_type_id é obrigatório!",
         "any.required": "O campo user_type_id é obrigatório!",
     }),
-    OAB: Joi.string().pattern(/^[A-Z]{2}\d{4,6}$/).when('user_type_id', {is: '53dfc840-502e-423a-b281-954dde752230',then: Joi.required(),otherwise: Joi.optional()}).messages({
+    oab: Joi.string().pattern(/^[A-Z]{2}\d{4,6}$/).when('user_type_id', {is: '53dfc840-502e-423a-b281-954dde752230',then: Joi.required(),otherwise: Joi.optional()}).messages({
         "string.empty": "O campo OAB é obrigatório para advogados!",
         "string.pattern.base": "Formato de OAB inválido! Deve seguir o padrão UF + Número (ex: SP123456).",
         "any.required": "O campo OAB é obrigatório para advogados!",
@@ -53,7 +53,7 @@ const validacaoCadastrarUsuario = Joi.object({
         "string.max": "A senha deve ter no máximo 20 caracteres",
         "any.required": "O campo senha é obrigatório!",
     }),
-    CPF: Joi.string().custom((value, helpers) => {
+    cpf: Joi.string().custom((value, helpers) => {
         if (!isValidCPF(value)) {
             return helpers.error("any.invalid");
         }
