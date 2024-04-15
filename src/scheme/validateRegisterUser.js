@@ -30,7 +30,13 @@ const validacaoCadastrarUsuario = Joi.object({
         "string.base": "Formato de nome inválido!",
         "any.required": "O campo nome é obrigatório!",
     }),
-    user_type_id: Joi.string().required().valid('53dfc840-502e-423a-b281-954dde752230', '2a8e7948-55e4-4f3e-aaf1-b699d699654f', '4a021d0b-88a5-4f96-8101-0509ea7dcb4a', 'd6ab38f4-4567-480f-9553-61928cd86f74', 'f7fc995c-4df5-4740-af9e-d4b1fdf56c94').messages({
+    user_type_id: Joi.string().required().valid(
+        '53dfc840-502e-423a-b281-954dde752230', 
+        '2a8e7948-55e4-4f3e-aaf1-b699d699654f', 
+        '4a021d0b-88a5-4f96-8101-0509ea7dcb4a', 
+        'd6ab38f4-4567-480f-9553-61928cd86f74', 
+        'f7fc995c-4df5-4740-af9e-d4b1fdf56c94'
+    ).messages({
         "string.empty": "O campo user_type_id é obrigatório!",
         "any.required": "O campo user_type_id é obrigatório!",
     }),
@@ -64,4 +70,21 @@ const validacaoCadastrarUsuario = Joi.object({
     }),
 });
 
-module.exports = validacaoCadastrarUsuario;
+
+const validarLoginUsuario = Joi.object({
+    email: Joi.string().email().required().messages({
+        "string.email": "Email inválido!",
+        "any.required": "O campo email é obrigatório para cadastro com email!",
+    }),
+    senha: Joi.string().min(6).max(20).required().messages({
+        "string.empty": "O campo senha é obrigatório!",
+        "string.min": "A senha deve ter no mínimo 6 caracteres",
+        "string.max": "A senha deve ter no máximo 20 caracteres",
+        "any.required": "O campo senha é obrigatório!",
+    }),
+});
+
+module.exports = {
+    validacaoCadastrarUsuario,
+    validarLoginUsuario
+};
