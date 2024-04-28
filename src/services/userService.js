@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 async function registerUser({ user_type_id, nome, email, telefone, senha, oab, cpf, office_id }) {
     const usuarioExistente = await knex("users_documents").where({ document_number: cpf }).first();
 
-    if (usuarioExistente) {
+    if (usuarioExistente) { 
         throw new Error("Usuário já cadastrado");
     }
 

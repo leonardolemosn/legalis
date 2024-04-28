@@ -59,7 +59,7 @@ async function registerOffice({ cnpj, razao_social, nome_fantasia, cep, state, c
         });
     });
 
-    return officeId; // Retorna apenas o UUID
+    return officeId;
 }
 
 module.exports = {
