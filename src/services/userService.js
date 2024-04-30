@@ -102,14 +102,16 @@ async function registerUser({ user_type_id, nome, email, telefone, senha, oab, c
 
 
 async function loginUser({ email, senha }) {
-    const processandoLogin = await knex("users").where({ email });
+    const processandoLogin = await knex("users").where({ email }).first();
 
-    if (processandoLogin.length === 0 || !(await bcrypt.compare(senha, processandoLogin[0].password))) {
-        throw new Error("Usuário ou senha incorretos")
+    if (!processandoLogin || !(await bcrypt.compare(senha, processandoLogin.password))) {
+        throw new Error("Usuário ou senha incorretos");
     }
-    const token = jwt.sign({ id: processandoLogin[0].id }, jwtPassword = process.env.JWT_SECRET, {
+    const jwtPassword = process.env.JWT_SECRET;
+    const token = jwt.sign({ id: processandoLogin.user_id }, jwtPassword, {
         expiresIn: "7d",
     });
+
     return { token };
 }
 

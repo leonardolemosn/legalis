@@ -1,6 +1,4 @@
 const knex = require("../config/conexao");
-const jwt = require('jsonwebtoken');
-const { jwtPassword } = require("../config/security/jwtPassword");
 const { consultarCNPJ } = require("../services/cnpjValidate");
 const { consultarCEP } = require("../services/cepValidate");
 const { registerUser } = require("../services/userService");
