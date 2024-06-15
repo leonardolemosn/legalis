@@ -15,7 +15,6 @@ async function registerCustomer(data) {
                 throw new Error("O tipo de pessoa (people_type_id) é necessário.");
             }
 
-            // Inserir dados na tabela 'people' e extrair o 'id'
             const peopleRecord = await trx("people").insert({
                 user_id,
                 profile_type_id,
@@ -32,7 +31,7 @@ async function registerCustomer(data) {
                 updated_at: new Date()
             }).returning('id');
 
-            const peopleId = peopleRecord[0].id; // Assumindo que returning('id') devolve um array de objetos
+            const peopleId = peopleRecord[0].id;
             console.log("People ID:", peopleId);
 
             let companyId = null;
@@ -43,10 +42,9 @@ async function registerCustomer(data) {
                     people_id: peopleId,
                     created_at: new Date(),
                 }).returning('id');
-                companyId = companyRecord[0].id; // Extrair o ID da empresa inserida
+                companyId = companyRecord[0].id;
             }
 
-            // Inserir dados na tabela 'customer_addresses'
             await trx("customer_addresses").insert({
                 company_id: companyId,
                 people_id: peopleId,
@@ -60,7 +58,6 @@ async function registerCustomer(data) {
                 updated_at: new Date()
             });
 
-            // Inserir documentos, se aplicável
             if (rg) {
                 await trx("customers_documents").insert({
                     people_id: peopleId,
